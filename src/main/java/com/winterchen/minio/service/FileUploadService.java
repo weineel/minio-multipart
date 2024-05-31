@@ -99,7 +99,7 @@ public class FileUploadService {
         response.setUploadId(uploadCreate.getUploadId());
         Map<String, String> reqParams = new HashMap<>();
         reqParams.put("uploadId", uploadId.result().uploadId());
-        for (int i = 0; i <= createRequest.getChunkSize(); i++) {
+        for (int i = 1 ; i <= createRequest.getChunkSize(); i++) {
             reqParams.put("partNumber", String.valueOf(i));
             String presignedObjectUrl = minioHelper.getPresignedObjectUrl(uploadCreate.getBucketName(), uploadCreate.getObjectName(), reqParams);
             if (StringUtils.isNotBlank(minioHelper.minioProperties.getPath())) {//如果线上环境配置了域名解析，可以进行替换
@@ -128,7 +128,7 @@ public class FileUploadService {
                     .uploadId(uploadRequest.getUploadId())
                     .partNumberMarker(0)
                     .build());
-            final ObjectWriteResponse objectWriteResponse = minioHelper.completeMultipartUpload(MultipartUploadCreate.builder()
+            minioHelper.completeMultipartUpload(MultipartUploadCreate.builder()
                     .bucketName(minioHelper.minioProperties.getBucketName())
                     .uploadId(uploadRequest.getUploadId())
                     .objectName(uploadRequest.getFileName())
