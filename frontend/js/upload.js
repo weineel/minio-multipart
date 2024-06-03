@@ -118,13 +118,32 @@ videoPlay = (url,suffix) => {
  * @returns {Promise<unknown>}
  */
 getFileMd5 = (file) => {
-    let fileReader = new FileReader()
-    fileReader.readAsBinaryString(file)
-    let spark = new SparkMD5()
-    return new Promise((resolve) => {
+    let chunks = Math.ceil(file.size / chunkSize);
+    let currentChunk = 0;
+    let spark = new SparkMD5.ArrayBuffer();
+    let fileReader = new FileReader();
+
+    return new Promise((resolve, reject) => {
         fileReader.onload = (e) => {
-            spark.appendBinary(e.target.result)
-            resolve(spark.end())
+            spark.append(e.target.result);
+            currentChunk++;
+            if (currentChunk < chunks) {
+                loadNext();
+            } else {
+                resolve(spark.end());
+            }
+        };
+
+        fileReader.onerror = (e) => {
+            reject(e);
+        };
+
+        function loadNext() {
+            let start = currentChunk * chunkSize;
+            let end = ((start + chunkSize) >= file.size) ? file.size : start + chunkSize;
+            fileReader.readAsArrayBuffer(file.slice(start, end));
         }
-    })
-}
+
+        loadNext();
+    });
+};
